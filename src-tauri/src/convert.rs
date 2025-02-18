@@ -153,7 +153,7 @@ pub fn convert_video(
         .map(|f| image::open(f.path()).unwrap())
         .chunks(256)
         .collect();
-    fs::remove_dir_all("./autovideo cache/frames").unwrap();
+    fs::remove_dir_all("./autovideo cache").unwrap();
 
     let grid_amount = frames.len();
     if grid_amount > 24 {
