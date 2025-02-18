@@ -13,8 +13,8 @@
         "windows": [
             {
                 "title": "autovideo-ui",
-                "width": 500,
-                "height": 350,
+                "width": 530,
+                "height": 450,
                 "decorations": false,
                 "resizable": true,
                 "transparent": true
