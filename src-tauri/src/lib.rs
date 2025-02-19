@@ -87,8 +87,8 @@ async fn convert_files(
     let trailing_spaced_mod_identifier = elongate(&mod_name, ' ', 10, false);
 
     let mut download_progress = DownloadProgress {
-        current: 1,
-        max: 1 + if keep_aspect_ratio {
+        current: 0,
+        max: if keep_aspect_ratio {
             videos.len() * 3
         } else {
             videos.len() * 2

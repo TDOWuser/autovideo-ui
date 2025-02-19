@@ -14,7 +14,6 @@ pub fn generate_script(
     video_data: &[(String, String, String, bool)],
     script_info: ScriptInfo,
 ) -> Result<(), String> {
-    println!("\nPlease provide the following information to generate the script:");
     let esp_name = script_info.esp_name;
     let tv_record = script_info.tv_record;
     let pr_record = script_info.pr_record;

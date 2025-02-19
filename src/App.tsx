@@ -6,6 +6,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import PathSelector from "./components/path-selector.component";
 import { fileName } from "./utility";
 import { listen } from "@tauri-apps/api/event";
+import { message } from "@tauri-apps/plugin-dialog";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
 const appWindow = getCurrentWindow()
 document.getElementById('minimize-button')?.addEventListener('click', () => appWindow.minimize())
@@ -49,35 +51,48 @@ function App() {
 
     const onStart = async () => {
         setActive(true)
+        setProgress({current: 0, max: 1})
         const unlisten = await listen<{ current: number, max: number }>('listener', (event) => setProgress(event.payload))
-        await invoke('convert_files', {
-            inputs,
-            inputEsp: esp,
-            inputEspDriveIn: desp,
-            modName: 'test',
-            inputFramerate: fps,
-            shortNames,
-            videoName: undefined,
-            size,
-            keepAspectRatio,
-            scriptInfo: selectedGenerate === 'script' ? {
-                esp_name: espName,
-                tv_record: tvRecord,
-                pr_record: prRecord,
-                di_esp_name: driveInEspName
-            } : undefined
-        })
+        try {
+            await invoke('convert_files', {
+                inputs,
+                inputEsp: esp,
+                inputEspDriveIn: desp,
+                modName: 'test',
+                inputFramerate: fps,
+                shortNames,
+                videoName: undefined,
+                size,
+                keepAspectRatio,
+                scriptInfo: selectedGenerate === 'script' ? {
+                    esp_name: espName,
+                    tv_record: tvRecord,
+                    pr_record: prRecord,
+                    di_esp_name: driveInEspName
+                } : undefined
+            })
+            await revealItemInDir('./output')
+        } catch (err) {
+            await message(String(err), { title: 'Error', kind: 'error' })
+        }
         unlisten()
         setActive(false)
     }
 
     return (
-        <div className="window-body has-space">
+        <div className="window-body has-space" style={{height: 280, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
             <div style={{display: 'flex', justifyContent: 'space-between'}}>
                 <div>
                     <div className="field-row-stacked" style={{marginBottom: 6}}>
                         <label htmlFor="mod-name">Mod Name*</label>
-                        <input autoComplete="off" id="mod-name" type="text" value={modName} onChange={e => {if (e.target.value.length <= 10) setModName(e.target.value)}} />
+                        <input
+                            autoComplete="off"
+                            id="mod-name"
+                            type="text"
+                            value={modName}
+                            onChange={e => {if (e.target.value.length <= 10) setModName(e.target.value)}}
+                            title={`Name of the mod. Can't be longer than 10 characters!`}
+                        />
                     </div>
                     <PathSelector
                         value={inputs}
@@ -85,7 +100,7 @@ function App() {
                         htmlId="input-path"
                         name="Input Path*"
                         options={{multiple: true, filters: [{name: 'Video', extensions: ['mp4', 'mkv', 'avi', 'gif', 'webp']}]}}
-                        tooltip={`Path to video or folder of videos to convert.\nNames of video files will be used to name the holotapes. In case of single video file, name can be overwritten using "-n".`}
+                        tooltip={`Path to video(s) to convert.\nNames of video files will be used to name the holotapes.\nVideo names can't be longer than 10 characters!`}
                     />
                     {selectedGenerate === 'esp' && <>
                         <PathSelector
@@ -94,6 +109,7 @@ function App() {
                             htmlId="esp-path"
                             name="ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
+                            tooltip={`Path to existing esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
                         />
                         <PathSelector
                             value={desp ? [desp] : []}
@@ -101,24 +117,21 @@ function App() {
                             htmlId="desp-path"
                             name="DriveIn ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
+                            tooltip={`Path to existing DriveIn esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
                         />
                     </>}
                     {selectedGenerate === 'script' && <>
                         <div className="field-row-stacked">
                             <label htmlFor="esp-name-input">ESP Name*</label>
-                            <input id="esp-name-input" type="text" value={espName} onChange={e => setEspName(e.target.value)} />
+                            <input id="esp-name-input" type="text" placeholder="your_votw_mod.esp" value={espName} onChange={e => setEspName(e.target.value)} />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="tv-record-input">TV Record*</label>
-                            <input id="tv-record-input" type="text" value={tvRecord} onChange={e => setTvRecord(e.target.value)} />
+                            <input id="tv-record-input" type="text" placeholder="03002E88" value={tvRecord} onChange={e => setTvRecord(e.target.value)} title="FormID for any existing TV Activator" />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="pr-record-input">Projector Record*</label>
-                            <input id="pr-record-input" type="text" value={prRecord} onChange={e => setPrRecord(e.target.value)} />
-                        </div>
-                        <div className="field-row-stacked">
-                            <label htmlFor="di-esp-input">DriveIn ESP Name</label>
-                            <input id="di-esp-input" type="text" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} />
+                            <input id="pr-record-input" type="text" placeholder="03002E98" value={prRecord} onChange={e => setPrRecord(e.target.value)} title="FormID for any existing Projector Activator" />
                         </div>
                     </>}
                 </div>
@@ -137,7 +150,7 @@ function App() {
                     <div style={{display: 'flex', gap: 10}}>
                         <div>
                             <label htmlFor="size-select" style={{marginRight: 5}}>Size</label>
-                            <select id="size-select" value={size} onChange={e => setSize(Number(e.target.value))}>
+                            <select id="size-select" value={size} onChange={e => setSize(Number(e.target.value))} title={`Size of output frames\nDetermines video resolution in-game. Switch to 256 in case you want to preserve drive space`}>
                                 {[128, 256, 512, 1024].map(option => (
                                     <option key={option}>{option}</option>
                                 ))}
@@ -145,25 +158,37 @@ function App() {
                         </div>
                         <div>
                             <label htmlFor="fps-select" style={{marginRight: 5}}>FPS</label>
-                            <input id="fps-select" type="number" min={1} max={60} value={fps} onChange={e => {
-                                const nr = Number(e.target.value)
-                                if (nr <= 60 && nr >= 1) {
-                                    setFps(nr)
-                                }
-                            }} />
+                            <input
+                                id="fps-select"
+                                type="number"
+                                min={1}
+                                max={60}
+                                value={fps}
+                                onChange={e => {
+                                    const nr = Number(e.target.value)
+                                    if (nr <= 60 && nr >= 1) {
+                                        setFps(nr)
+                                    }
+                                }}
+                                title={`Framerate at which to play the videos in-game\nAlternatively you can put the wanted framerate in the video filename like this: video.30.mp4.`}
+                            />
                         </div>
                     </div>
                     <fieldset>
                         <legend>Options</legend>
                         <div className="field-row">
                             <input checked={shortNames} onChange={() => setShortNames(b => !b)} type="checkbox" id="short-names" />
-                            <label htmlFor="short-names">Short names</label>
+                            <label title="Enable to not give a warning for names being too long and to automatically cut them shorter" htmlFor="short-names">Short names</label>
                         </div>
                         <div className="field-row">
                             <input checked={keepAspectRatio} onChange={() => setKeepAspectRatio(b => !b)} type="checkbox" id="keep-aspect-ratio" />
-                            <label htmlFor="keep-aspect-ratio">Keep aspect ratio</label>
+                            <label title="Will automatically refit input to 4:3 aspect ratio. (Which fits FO4 TVs better)" htmlFor="keep-aspect-ratio">Keep aspect ratio</label>
                         </div>
                     </fieldset>
+                    {selectedGenerate === 'script' && <div className="field-row-stacked">
+                        <label htmlFor="di-esp-input">DriveIn ESP Name</label>
+                        <input id="di-esp-input" type="text" placeholder="your_di_votw_mod.esp" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} title="Leave empty if not applicable" />
+                    </div>}
                 </div>
             </div>
             <div style={{display: 'flex', gap: 10, alignItems: 'center', marginTop: 6}}>
