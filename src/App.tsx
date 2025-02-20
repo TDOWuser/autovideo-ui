@@ -17,7 +17,7 @@ window.addEventListener('contextmenu', e => e.preventDefault())
 
 function App() {
     const [active, setActive] = useState(false)
-    const [progress, setProgress] = useState({current: 0, max: 1})
+    const [progress, setProgress] = useState({current: 0, max: 1, isErrored: false})
 
     const [modName, setModName] = useState('')
     const [selectedGenerate, setSelectedGenerate] = useState<'esp' | 'script'>('esp')
@@ -51,8 +51,8 @@ function App() {
 
     const onStart = async () => {
         setActive(true)
-        setProgress({current: 0, max: 1})
-        const unlisten = await listen<{ current: number, max: number }>('listener', (event) => setProgress(event.payload))
+        setProgress({current: 0, max: 1, isErrored: false})
+        const unlisten = await listen<{ current: number, max: number }>('listener', (event) => setProgress({...event.payload, isErrored: false}))
         try {
             await invoke('convert_files', {
                 inputs,
@@ -73,6 +73,7 @@ function App() {
             })
             await revealItemInDir('./output')
         } catch (err) {
+            setProgress({current: 1, max: 1, isErrored: true})
             await message(String(err), { title: 'Error', kind: 'error' })
         }
         unlisten()
@@ -92,6 +93,7 @@ function App() {
                             value={modName}
                             onChange={e => {if (e.target.value.length <= 10) setModName(e.target.value)}}
                             title={`Name of the mod. Can't be longer than 10 characters!`}
+                            disabled={active}
                         />
                     </div>
                     <PathSelector
@@ -101,6 +103,7 @@ function App() {
                         name="Input Path*"
                         options={{multiple: true, filters: [{name: 'Video', extensions: ['mp4', 'mkv', 'avi', 'gif', 'webp']}]}}
                         tooltip={`Path to video(s) to convert.\nNames of video files will be used to name the holotapes.\nVideo names can't be longer than 10 characters!`}
+                        disabled={active}
                     />
                     {selectedGenerate === 'esp' && <>
                         <PathSelector
@@ -110,6 +113,7 @@ function App() {
                             name="ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
                             tooltip={`Path to existing esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
+                            disabled={active}
                         />
                         <PathSelector
                             value={desp ? [desp] : []}
@@ -118,20 +122,21 @@ function App() {
                             name="DriveIn ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
                             tooltip={`Path to existing DriveIn esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
+                            disabled={active}
                         />
                     </>}
                     {selectedGenerate === 'script' && <>
                         <div className="field-row-stacked">
                             <label htmlFor="esp-name-input">ESP Name*</label>
-                            <input id="esp-name-input" type="text" placeholder="your_votw_mod.esp" value={espName} onChange={e => setEspName(e.target.value)} />
+                            <input id="esp-name-input" type="text" placeholder="your_votw_mod.esp" value={espName} onChange={e => setEspName(e.target.value)} disabled={active} />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="tv-record-input">TV Record*</label>
-                            <input id="tv-record-input" type="text" placeholder="03002E88" value={tvRecord} onChange={e => setTvRecord(e.target.value)} title="FormID for any existing TV Activator" />
+                            <input id="tv-record-input" type="text" placeholder="03002E88" value={tvRecord} onChange={e => setTvRecord(e.target.value)} title="FormID for any existing TV Activator" disabled={active} />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="pr-record-input">Projector Record*</label>
-                            <input id="pr-record-input" type="text" placeholder="03002E98" value={prRecord} onChange={e => setPrRecord(e.target.value)} title="FormID for any existing Projector Activator" />
+                            <input id="pr-record-input" type="text" placeholder="03002E98" value={prRecord} onChange={e => setPrRecord(e.target.value)} title="FormID for any existing Projector Activator" disabled={active} />
                         </div>
                     </>}
                 </div>
@@ -139,18 +144,18 @@ function App() {
                     <fieldset>
                         <legend>ESP / Script</legend>
                         <div className="field-row">
-                            <input id="selector-esp" type="radio" name="esp" onChange={() => setSelectedGenerate('esp')} checked={selectedGenerate === 'esp'}/>
+                            <input id="selector-esp" type="radio" name="esp" onChange={() => setSelectedGenerate('esp')} checked={selectedGenerate === 'esp'} disabled={active} />
                             <label htmlFor="selector-esp">Generate esp file</label>
                         </div>
                         <div className="field-row">
-                            <input id="selector-script" type="radio" name="script" onChange={() => setSelectedGenerate('script')} checked={selectedGenerate === 'script'}/>
+                            <input id="selector-script" type="radio" name="script" onChange={() => setSelectedGenerate('script')} checked={selectedGenerate === 'script'} disabled={active} />
                             <label title={`For advanced users. Generates a FO4Edit script to add video records to existing esp. No esps will be generated\nUseful for when you already have an existing VotW esp, either a full one made by autovideo or one you made yourself`} htmlFor="selector-script">Generate script</label>
                         </div>
                     </fieldset>
                     <div style={{display: 'flex', gap: 10}}>
                         <div>
                             <label htmlFor="size-select" style={{marginRight: 5}}>Size</label>
-                            <select id="size-select" value={size} onChange={e => setSize(Number(e.target.value))} title={`Size of output frames\nDetermines video resolution in-game. Switch to 256 in case you want to preserve drive space`}>
+                            <select disabled={active} id="size-select" value={size} onChange={e => setSize(Number(e.target.value))} title={`Size of output frames\nDetermines video resolution in-game. Switch to 256 in case you want to preserve drive space`}>
                                 {[128, 256, 512, 1024].map(option => (
                                     <option key={option}>{option}</option>
                                 ))}
@@ -171,28 +176,29 @@ function App() {
                                     }
                                 }}
                                 title={`Framerate at which to play the videos in-game\nAlternatively you can put the wanted framerate in the video filename like this: video.30.mp4.`}
+                                disabled={active}
                             />
                         </div>
                     </div>
                     <fieldset>
                         <legend>Options</legend>
                         <div className="field-row">
-                            <input checked={shortNames} onChange={() => setShortNames(b => !b)} type="checkbox" id="short-names" />
+                            <input checked={shortNames} onChange={() => setShortNames(b => !b)} type="checkbox" id="short-names" disabled={active} />
                             <label title="Enable to not give a warning for names being too long and to automatically cut them shorter" htmlFor="short-names">Short names</label>
                         </div>
                         <div className="field-row">
-                            <input checked={keepAspectRatio} onChange={() => setKeepAspectRatio(b => !b)} type="checkbox" id="keep-aspect-ratio" />
+                            <input checked={keepAspectRatio} onChange={() => setKeepAspectRatio(b => !b)} type="checkbox" id="keep-aspect-ratio" disabled={active} />
                             <label title="Will automatically refit input to 4:3 aspect ratio. (Which fits FO4 TVs better)" htmlFor="keep-aspect-ratio">Keep aspect ratio</label>
                         </div>
                     </fieldset>
                     {selectedGenerate === 'script' && <div className="field-row-stacked">
                         <label htmlFor="di-esp-input">DriveIn ESP Name</label>
-                        <input id="di-esp-input" type="text" placeholder="your_di_votw_mod.esp" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} title="Leave empty if not applicable" />
+                        <input id="di-esp-input" type="text" placeholder="your_di_votw_mod.esp" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} title="Leave empty if not applicable" disabled={active} />
                     </div>}
                 </div>
             </div>
             <div style={{display: 'flex', gap: 10, alignItems: 'center', marginTop: 6}}>
-                <div role="progressbar" className={active ? (progress.current === 0 ? 'marquee' : 'animate') : ''} style={{width: '100%'}}>
+                <div role="progressbar" className={`${active ? (progress.current === 0 ? 'marquee' : 'animate') : ''} ${progress.isErrored ? 'error' : ''}`} style={{width: '100%'}}>
                     <div style={{width: `${progress.current/progress.max*100}%`}}></div>
                 </div>
                 <button onClick={onStart} disabled={!inputValid || active}>START</button>
