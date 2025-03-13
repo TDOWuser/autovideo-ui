@@ -23,4 +23,4 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-dialog = "2"
-autovideo = { git = "https://github.com/TDOWuser/autovideo-cli.git", tag = "v1.5.2a" }
+autovideo = { git = "https://github.com/TDOWuser/autovideo-cli.git", tag = "v1.5.3" }

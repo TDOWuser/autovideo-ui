@@ -102,7 +102,7 @@ function App() {
                         htmlId="input-path"
                         name="Input Path*"
                         options={{multiple: true, filters: [{name: 'Video', extensions: ['mp4', 'mkv', 'avi', 'gif', 'webp']}]}}
-                        tooltip={`Path to video(s) to convert.\nNames of video files will be used to name the holotapes.\nVideo names can't be longer than 10 characters!`}
+                        tooltip={`Path(s) to video(s) to convert.\nNames of video files will be used to name the holotapes.\nVideo names can't be longer than 10 characters!`}
                         disabled={active}
                     />
                     {selectedGenerate === 'esp' && <>
@@ -112,7 +112,7 @@ function App() {
                             htmlId="esp-path"
                             name="ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
-                            tooltip={`Path to existing esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
+                            tooltip={`OPTIONAL\nPath to existing esp file to append to that one instead of generating a new one\nThis will create a copy in the output folder and not directly edit given one\nOnly works on ESPs that still have placeholders left`}
                             disabled={active}
                         />
                         <PathSelector
@@ -121,22 +121,22 @@ function App() {
                             htmlId="desp-path"
                             name="DriveIn ESP Path"
                             options={{filters: [{name: 'CreationKit ESP', extensions: ['esp']}]}}
-                            tooltip={`Path to existing DriveIn esp file to append to that one instead of generating a new one.\nThis will create a copy in the output folder and not directly edit given one`}
+                            tooltip={`OPTIONAL\nPath to existing DriveIn esp file to append to that one instead of generating a new one\nThis will create a copy in the output folder and not directly edit given one\nOnly works on ESPs that still have placeholders left`}
                             disabled={active}
                         />
                     </>}
                     {selectedGenerate === 'script' && <>
                         <div className="field-row-stacked">
                             <label htmlFor="esp-name-input">ESP Name*</label>
-                            <input id="esp-name-input" type="text" placeholder="your_votw_mod.esp" value={espName} onChange={e => setEspName(e.target.value)} disabled={active} />
+                            <input id="esp-name-input" autoComplete="off" type="text" placeholder="your_votw_mod.esp" value={espName} onChange={e => setEspName(e.target.value)} disabled={active} title="Full name of ESP to apply the script to" />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="tv-record-input">TV Record*</label>
-                            <input id="tv-record-input" type="text" placeholder="03002E88" value={tvRecord} onChange={e => setTvRecord(e.target.value)} title="FormID for any existing TV Activator" disabled={active} />
+                            <input id="tv-record-input" autoComplete="off" type="text" placeholder="03002E88" value={tvRecord} onChange={e => setTvRecord(e.target.value)} title="FormID for any existing TV Activator, doesn't matter which" disabled={active} />
                         </div>
                         <div className="field-row-stacked">
                             <label htmlFor="pr-record-input">Projector Record*</label>
-                            <input id="pr-record-input" type="text" placeholder="03002E98" value={prRecord} onChange={e => setPrRecord(e.target.value)} title="FormID for any existing Projector Activator" disabled={active} />
+                            <input id="pr-record-input" autoComplete="off" type="text" placeholder="03002E98" value={prRecord} onChange={e => setPrRecord(e.target.value)} title="FormID for any existing Projector Activator, doesn't matter which" disabled={active} />
                         </div>
                     </>}
                 </div>
@@ -184,7 +184,7 @@ function App() {
                         <legend>Options</legend>
                         <div className="field-row">
                             <input checked={shortNames} onChange={() => setShortNames(b => !b)} type="checkbox" id="short-names" disabled={active} />
-                            <label title="Enable to not give a warning for names being too long and to automatically cut them shorter" htmlFor="short-names">Short names</label>
+                            <label title={`Enable to not give a warning for names being too long and to automatically cut them shorter\nWill not work if multiple videos start with the same 10 characters`} htmlFor="short-names">Short names</label>
                         </div>
                         <div className="field-row">
                             <input checked={keepAspectRatio} onChange={() => setKeepAspectRatio(b => !b)} type="checkbox" id="keep-aspect-ratio" disabled={active} />
@@ -193,7 +193,7 @@ function App() {
                     </fieldset>
                     {selectedGenerate === 'script' && <div className="field-row-stacked">
                         <label htmlFor="di-esp-input">DriveIn ESP Name</label>
-                        <input id="di-esp-input" type="text" placeholder="your_di_votw_mod.esp" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} title="Leave empty if not applicable" disabled={active} />
+                        <input id="di-esp-input" autoComplete="off" type="text" placeholder="your_di_votw_mod.esp" value={driveInEspName} onChange={e => setDriveinEspName(e.target.value)} title="Leave empty if not applicable" disabled={active} />
                     </div>}
                 </div>
             </div>

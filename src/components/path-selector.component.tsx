@@ -27,7 +27,7 @@ const PathSelector = ({ htmlId, name, options, tooltip, value, onConfirm, disabl
                 <label htmlFor={htmlId}>{name}</label>
                 <input title={tooltip} id={htmlId} type="text" value={value.join(', ')} onChange={e => {if (e.target.value === '') onConfirm([])}} autoComplete='off' disabled={disabled} />
             </div>
-            <button disabled={disabled} onClick={onButtonPress}>Select File</button>
+            <button disabled={disabled} onClick={onButtonPress}>Select File{options?.multiple ? '(s)' : ''}</button>
         </div>
     )
 }
