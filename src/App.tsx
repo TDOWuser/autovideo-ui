@@ -58,7 +58,7 @@ function App() {
                 inputs,
                 inputEsp: esp,
                 inputEspDriveIn: desp,
-                modName: 'test',
+                modName,
                 inputFramerate: fps,
                 shortNames,
                 videoName: undefined,
@@ -101,7 +101,7 @@ function App() {
                         onConfirm={setInputs}
                         htmlId="input-path"
                         name="Input Path*"
-                        options={{multiple: true, filters: [{name: 'Video', extensions: ['mp4', 'mkv', 'avi', 'gif', 'webp']}]}}
+                        options={{multiple: true, filters: [{name: 'Video', extensions: ['mp4', 'mkv', 'webm', 'avi', 'gif', 'webp']}]}}
                         tooltip={`Path(s) to video(s) to convert.\nNames of video files will be used to name the holotapes.\nVideo names can't be longer than 10 characters!`}
                         disabled={active}
                     />
