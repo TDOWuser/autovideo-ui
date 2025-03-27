@@ -4,7 +4,6 @@ import "7.css"
 import "./App.css"
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import PathSelector from "./components/path-selector.component";
-import { fileName } from "./utility";
 import { listen } from "@tauri-apps/api/event";
 import { message } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
@@ -36,16 +35,7 @@ function App() {
     const [shortNames, setShortNames] = useState(true)
     const [keepAspectRatio, setKeepAspectRatio] = useState(true)
 
-    let namesTooLong
-    if (shortNames) {
-        const shortNamesList = inputs.map(input => fileName(input)?.slice(0, 10))
-        namesTooLong = inputs.some((input, index) => shortNamesList.indexOf(fileName(input)?.slice(0, 10)) !== index)
-    } else {
-        namesTooLong = inputs.some(i => fileName(i)!.length > 10)
-    }
-
     const inputValid = inputs.length > 0
-        && !namesTooLong
         && modName.length > 0
         && (selectedGenerate === 'script' ? (espName.length > 0 && tvRecord.length > 0 && prRecord.length > 0) : true)
 
